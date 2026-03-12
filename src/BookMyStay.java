@@ -1,72 +1,60 @@
 import java.util.*;
 
-class BookingRequest {
-    String guestName;
-    String roomType;
+class AddOnService {
+    String serviceName;
+    double cost;
 
-    BookingRequest(String guestName, String roomType) {
-        this.guestName = guestName;
-        this.roomType = roomType;
+    AddOnService(String serviceName, double cost) {
+        this.serviceName = serviceName;
+        this.cost = cost;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+}
+
+class AddOnServiceManager {
+
+    private Map<String, List<AddOnService>> reservationServices = new HashMap<>();
+
+    public void addService(String reservationId, AddOnService service) {
+        reservationServices
+                .computeIfAbsent(reservationId, k -> new ArrayList<>())
+                .add(service);
+    }
+
+    public double calculateTotalCost(String reservationId) {
+
+        double total = 0;
+
+        List<AddOnService> services = reservationServices.get(reservationId);
+
+        if (services != null) {
+            for (AddOnService s : services) {
+                total += s.getCost();
+            }
+        }
+
+        return total;
     }
 }
 
 public class BookApp {
 
-    private Queue<BookingRequest> bookingQueue = new LinkedList<>();
-
-    private Set<String> allocatedRooms = new HashSet<>();
-
-    private Map<String, Set<String>> roomTypeMap = new HashMap<>();
-
-    private Map<String, Integer> roomCounter = new HashMap<>();
-
-    public void addBooking(String guest, String roomType) {
-        bookingQueue.add(new BookingRequest(guest, roomType));
-    }
-
-    private String generateRoomId(String roomType) {
-
-        int count = roomCounter.getOrDefault(roomType, 0) + 1;
-        roomCounter.put(roomType, count);
-
-        String roomId = roomType + "-" + count;
-
-        allocatedRooms.add(roomId);
-
-        roomTypeMap
-                .computeIfAbsent(roomType, k -> new HashSet<>())
-                .add(roomId);
-
-        return roomId;
-    }
-
-    public void processBookings() {
-
-        System.out.println("Room Allocation Processing");
-
-        while (!bookingQueue.isEmpty()) {
-
-            BookingRequest request = bookingQueue.poll();
-
-            String roomId = generateRoomId(request.roomType);
-
-            System.out.println(
-                    "Booking confirmed for Guest: " +
-                            request.guestName +
-                            ", Room ID: " +
-                            roomId
-            );
-        }
-    }
-
     public static void main(String[] args) {
 
-        BookApp service = new BookApp();
+        AddOnServiceManager manager = new AddOnServiceManager();
 
-        service.addBooking("Abhi", "Single");
-        service.addBooking("Subha", "Single");
-        service.addBooking("Vanmathi", "Suite");
+        String reservationId = "Single-1";
 
-        service.processBookings();
+        manager.addService(reservationId, new AddOnService("Breakfast", 500));
+        manager.addService(reservationId, new AddOnService("Airport Pickup", 1000));
+
+        double totalCost = manager.calculateTotalCost(reservationId);
+
+        System.out.println("Add-On Service Selection");
+        System.out.println("Reservation ID: " + reservationId);
+        System.out.println("Total Add-On Cost: " + totalCost);
     }
 }
